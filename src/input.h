@@ -22,7 +22,7 @@ public:
     };
 
     // consts
-    static constexpr float DEADZONE = 2000.0f;
+    static constexpr float DEADZONE = 4000.0f;
     
     Input(const KeyboardConfig &initialConfig);
 
@@ -108,8 +108,8 @@ bool Input::InputStatePoll(Input::InputState& inputOut)
         inputOut.confirm = SDL_GetGamepadButton(mGamepad, SDL_GAMEPAD_BUTTON_SOUTH);
 
         Sint16 axis_y = SDL_GetGamepadAxis(mGamepad, SDL_GAMEPAD_AXIS_LEFTY);
-        inputOut.down = (axis_y > Input::DEADZONE || SDL_GetGamepadButton(mGamepad, SDL_GAMEPAD_BUTTON_DPAD_UP));
-        inputOut.up = (axis_y < -Input::DEADZONE || SDL_GetGamepadButton(mGamepad,SDL_GAMEPAD_BUTTON_DPAD_DOWN));
+        inputOut.down = (axis_y > Input::DEADZONE || SDL_GetGamepadButton(mGamepad,SDL_GAMEPAD_BUTTON_DPAD_DOWN));
+        inputOut.up = (axis_y < -Input::DEADZONE || SDL_GetGamepadButton(mGamepad, SDL_GAMEPAD_BUTTON_DPAD_UP));
     }
     // no gamepad, default to keyboard controls
     else
