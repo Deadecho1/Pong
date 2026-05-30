@@ -8,6 +8,11 @@ find_package(SDL3 REQUIRED)
 
 add_executable(pong
         src/main.cpp
-        src/input.h)
+        src/input.h
+        src/scene.h
+        src/scene_manager.h
+        src/main_menu_scene.h
+        src/app.h
+        )
 
 target_link_libraries(pong PRIVATE SDL3::SDL3)
