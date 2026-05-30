@@ -108,6 +108,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
                 if (gamepad){
                     SDL_CloseGamepad(gamepad);
                 }
+                gGamepadToInput.erase(which); // gamepad is no longer associated with this input
             }
 
             break;
