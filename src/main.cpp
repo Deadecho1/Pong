@@ -58,7 +58,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 
     Input* player2 = new Input(PLAYER2_CONFIG);
     gActiveInputs.push_back(player2);
-    player2->SetActive(false);
+    player2->SetActive(true);
 
     return SDL_APP_CONTINUE;
 }
@@ -74,10 +74,10 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 
         case SDL_EVENT_GAMEPAD_ADDED: {
             const SDL_JoystickID which = event->gdevice.which;
-            // find input with no associated gamepad
+            // find input with no associated gamepad, prioritizing player 2 input
             int inputI = 0;
             while (inputI < gActiveInputs.size()){
-                if (gActiveInputs[inputI]->GetController() == nullptr){
+                if (gActiveInputs[(inputI+1) % MAX_PLAYER_CONTROLLERS]->GetController() == nullptr){
                     break;
                 }
                 inputI++;
@@ -91,8 +91,8 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
                 }
                 // controller opened and ready to be associated with an input
                 else{
-                    gGamepadToInput[which] = gActiveInputs[inputI];
-                    gActiveInputs[inputI]->SetController(newController);
+                    gGamepadToInput[which] = gActiveInputs[(inputI+1) % MAX_PLAYER_CONTROLLERS];
+                    gActiveInputs[(inputI+1) % MAX_PLAYER_CONTROLLERS]->SetController(newController);
                 }
             }
             break;
@@ -133,16 +133,32 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     // poll player 1 input
     if (gActiveInputs[0]->InputStatePoll(gPlayer1InputState)){
         if (gPlayer1InputState.up){
-            SDL_Log("Up!");
+            SDL_Log("[PLAYER1] Up!");
         }
         if (gPlayer1InputState.down){
-            SDL_Log("Down!");
+            SDL_Log("[PLAYER1] Down!");
         }
         if (gPlayer1InputState.confirm){
-            SDL_Log("Confirm!");
+            SDL_Log("[PLAYER1] Confirm!");
         }
         if (gPlayer1InputState.esc){
-            SDL_Log("Escape!");
+            SDL_Log("[PLAYER1] Escape!");
+        }
+    }
+
+    // poll player2 input
+    if (gActiveInputs[1]->InputStatePoll(gPlayer2InputState)){
+        if (gPlayer2InputState.up){
+            SDL_Log("[PLAYER2] Up!");
+        }
+        if (gPlayer2InputState.down){
+            SDL_Log("[PLAYER2] Down!");
+        }
+        if (gPlayer2InputState.confirm){
+            SDL_Log("[PLAYER2] Confirm!");
+        }
+        if (gPlayer2InputState.esc){
+            SDL_Log("[PLAYER2] Escape!");
         }
     }
     
