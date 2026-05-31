@@ -43,17 +43,16 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     }
     SDL_SetRenderLogicalPresentation(app->renderer, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
-    // create space for inputs
-    app->activeInputs.reserve(MAX_PLAYER_CONTROLLERS);
     // create player 1
-    Input* player1 = new Input(PLAYER1_CONFIG);
-    app->activeInputs.push_back(player1);
+    std::unique_ptr<Input> player1 = std::make_unique<Input>(PLAYER1_CONFIG);
     player1->SetActive(true);
+    app->activeInputs.push_back(std::move(player1));
 
-    Input* player2 = new Input(PLAYER2_CONFIG);
-    app->activeInputs.push_back(player2);
+    // create player 2
+    std::unique_ptr<Input> player2 = std::make_unique<Input>(PLAYER2_CONFIG);
     player2->SetActive(true);
-
+    app->activeInputs.push_back(std::move(player2));
+    
     // initialize first scene
     std::unique_ptr<Scene> initialScene = std::make_unique<MainMenuScene>(app->sceneManager);
     app->sceneManager.PushScene(std::move(initialScene));
@@ -81,7 +80,8 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
             const SDL_JoystickID which = event->gdevice.which;
             // find input with no associated gamepad, prioritizing player 2 input
             int inputI = 0;
-            while (inputI < app->activeInputs.size()){
+            int activeInputsNum = app->activeInputs.size();
+            while (inputI < activeInputsNum){
                 if (app->activeInputs[(inputI+1) % MAX_PLAYER_CONTROLLERS]->GetController() == nullptr){
                     break;
                 }
@@ -89,14 +89,14 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
             }
 
             // there is an input slot for the controller, connect it.
-            if (inputI < app->activeInputs.size()){
+            if (inputI < activeInputsNum){
                 SDL_Gamepad *newController = SDL_OpenGamepad(which);
                 if (!newController){
                     SDL_Log("Couldn't open gamepad #%u: %s", (unsigned int) which, SDL_GetError());
                 }
                 // controller opened and ready to be associated with an input
                 else{
-                    app->gamepadToInput[which] = app->activeInputs[(inputI+1) % MAX_PLAYER_CONTROLLERS];
+                    app->gamepadToInput[which] = app->activeInputs[(inputI+1) % MAX_PLAYER_CONTROLLERS].get();
                     app->activeInputs[(inputI+1) % MAX_PLAYER_CONTROLLERS]->SetController(newController);
                 }
             }
@@ -147,16 +147,12 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
 void SDL_AppQuit(void *appstate, SDL_AppResult result){
     App* app = static_cast<App*>(appstate);
-    // remove inputs
-    for (int i = 0; i < app->activeInputs.size(); i++){
-        if (app->activeInputs[i] != nullptr){
-            delete app->activeInputs[i];
-        }
-    }
 
     SDL_DestroyRenderer(app->renderer);
     SDL_DestroyWindow(app->window);
 
     app->renderer = nullptr;
     app->window = nullptr;
+
+    delete app;
 }

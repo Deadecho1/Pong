@@ -14,7 +14,7 @@ struct App{
     Input::InputState player1InputState;
     Input::InputState player2InputState;
 
-    std::vector<Input*> activeInputs;
+    std::vector<std::unique_ptr<Input>> activeInputs;
     std::unordered_map<SDL_JoystickID, Input*> gamepadToInput;
 
     SceneManager sceneManager;
