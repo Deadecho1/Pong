@@ -48,14 +48,20 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     }
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     if (!SDL_CreateWindowAndRenderer("Pong", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE, &gWindow, &gRenderer)) {
 =======
+=======
+>>>>>>> Stashed changes
     if (!TTF_Init()){
         SDL_Log("Couldn't initialize TTF: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
     if (!SDL_CreateWindowAndRenderer("Pong", WINDOW_WIDTH, WINDOW_HEIGHT, 0, &app->window, &app->renderer)) {
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
@@ -63,9 +69,12 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     SDL_SetRenderLogicalPresentation(gRenderer, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     // create space for inputs
     gActiveInputs.reserve(MAX_PLAYER_CONTROLLERS);
 =======
+=======
+>>>>>>> Stashed changes
     // load fonts
     app->fontSmall = TTF_OpenFont("assets/fonts/PressStart2P-Regular.ttf", FONT_SIZE_SMALL);
     if (!app->fontSmall){
@@ -83,6 +92,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     app->screenW = WINDOW_WIDTH;
     app->screenH = WINDOW_HEIGHT;
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     // create player 1
     Input* player1 = new Input(PLAYER1_CONFIG);
@@ -99,6 +111,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     // initialize first scene
     std::unique_ptr<Scene> initialScene = std::make_unique<MainMenuScene>(app->sceneManager);
     app->sceneManager.PushScene(std::move(initialScene), app);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
     return SDL_APP_CONTINUE;
