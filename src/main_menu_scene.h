@@ -156,6 +156,4 @@ private:
     SDL_Color mSelectionColor = COLOR_WHITE;
 };
 
-
-
 #endif // __MAIN_MENU_H__

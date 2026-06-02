@@ -16,7 +16,6 @@ add_executable(pong
         src/scene_manager.h
         src/main_menu_scene.h
         src/app.h
-        src/button.h
         src/utilities.h
         )
 
