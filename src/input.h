@@ -11,6 +11,12 @@ public:
         bool down;
         bool confirm;
         bool esc;
+
+        // true only on the frame the button was first pressed
+        bool upPressed;
+        bool downPressed;
+        bool confirmPressed;
+        bool escPressed;
     };
 
     struct KeyboardConfig
@@ -101,6 +107,12 @@ bool Input::InputStatePoll(Input::InputState& inputOut)
         return false;
     }
 
+    // previous state
+    bool prevUp = inputOut.up;
+    bool prevDown = inputOut.down;
+    bool prevConfirm = inputOut.confirm;
+    bool prevEsc = inputOut.esc;
+
     // gamepad associated with this input
     if (mGamepad != nullptr)
     {         
@@ -121,6 +133,11 @@ bool Input::InputStatePoll(Input::InputState& inputOut)
         inputOut.up = (key_states[mConfig.up]);
         inputOut.down = (key_states[mConfig.down]);
     }
+
+    inputOut.upPressed = inputOut.up && !prevUp;
+    inputOut.downPressed = inputOut.down && !prevDown;
+    inputOut.confirmPressed = inputOut.confirm && !prevConfirm;
+    inputOut.escPressed = inputOut.esc && !prevEsc;
     
     return true;
 }

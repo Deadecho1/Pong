@@ -10,6 +10,10 @@ constexpr int WINDOW_HEIGHT = 480;
 
 constexpr int MAX_PLAYER_CONTROLLERS = 2;
 
+constexpr int FONT_SIZE_SMALL = 16;
+constexpr int FONT_SIZE_MEDIUM = 32;
+constexpr int FONT_SIZE_LARGE = 64;
+
 const Input::KeyboardConfig PLAYER1_CONFIG = {
     SDL_SCANCODE_W, //UP
     SDL_SCANCODE_S, //DOWN
@@ -43,14 +47,43 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         return SDL_APP_FAILURE;
     }
 
+<<<<<<< Updated upstream
     if (!SDL_CreateWindowAndRenderer("Pong", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE, &gWindow, &gRenderer)) {
+=======
+    if (!TTF_Init()){
+        SDL_Log("Couldn't initialize TTF: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
+    if (!SDL_CreateWindowAndRenderer("Pong", WINDOW_WIDTH, WINDOW_HEIGHT, 0, &app->window, &app->renderer)) {
+>>>>>>> Stashed changes
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
     SDL_SetRenderLogicalPresentation(gRenderer, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
+<<<<<<< Updated upstream
     // create space for inputs
     gActiveInputs.reserve(MAX_PLAYER_CONTROLLERS);
+=======
+    // load fonts
+    app->fontSmall = TTF_OpenFont("assets/fonts/PressStart2P-Regular.ttf", FONT_SIZE_SMALL);
+    if (!app->fontSmall){
+        SDL_Log("Couldn't open small font: %s", SDL_GetError());
+    }
+    app->fontMedium = TTF_OpenFont("assets/fonts/PressStart2P-Regular.ttf", FONT_SIZE_MEDIUM);
+    if (!app->fontMedium){
+        SDL_Log("Couldn't open medium font: %s", SDL_GetError());
+    }
+    app->fontLarge = TTF_OpenFont("assets/fonts/PressStart2P-Regular.ttf", FONT_SIZE_LARGE);
+    if (!app->fontLarge){
+        SDL_Log("Couldn't open large font: %s", SDL_GetError());
+    }
+
+    app->screenW = WINDOW_WIDTH;
+    app->screenH = WINDOW_HEIGHT;
+
+>>>>>>> Stashed changes
     // create player 1
     Input* player1 = new Input(PLAYER1_CONFIG);
     gActiveInputs.push_back(player1);
@@ -59,6 +92,14 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     Input* player2 = new Input(PLAYER2_CONFIG);
     gActiveInputs.push_back(player2);
     player2->SetActive(true);
+<<<<<<< Updated upstream
+=======
+    app->activeInputs.push_back(std::move(player2));
+    
+    // initialize first scene
+    std::unique_ptr<Scene> initialScene = std::make_unique<MainMenuScene>(app->sceneManager);
+    app->sceneManager.PushScene(std::move(initialScene), app);
+>>>>>>> Stashed changes
 
     return SDL_APP_CONTINUE;
 }
