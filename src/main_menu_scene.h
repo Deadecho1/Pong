@@ -1,11 +1,14 @@
 #ifndef __MAIN_MENU_H__
 #define __MAIN_MENU_H__
 
+#include <functional>
 #include "scene.h"
 #include "scene_manager.h"
 #include "utilities.h"
 
 static constexpr float COLOR_SPEED = 10.0f;
+static constexpr SDL_Color OPTION_COLOR = COLOR_WHITE;
+static constexpr SDL_Color OPTION_COLOR_SELECTED = COLOR_YELLOW;
 
 class MainMenuScene : public Scene {
 public:
@@ -22,29 +25,9 @@ public:
         SDL_DestroySurface(tempSurface);
 
         // create menu options
-        tempSurface = TTF_RenderText_Blended(appstate->fontMedium, "1-PLAYER", 0, COLOR_WHITE);
-        SDL_Texture* optionOneText = SDL_CreateTextureFromSurface(appstate->renderer, tempSurface);
-        if (!optionOneText){
-            SDL_Log("Could not create option texture! Error: %s", SDL_GetError());
-        }
-        mMenuOptions.push_back(optionOneText);
-        SDL_DestroySurface(tempSurface);
-
-        tempSurface = TTF_RenderText_Blended(appstate->fontMedium, "2-PLAYER", 0, COLOR_WHITE);
-        SDL_Texture* optionTwoText = SDL_CreateTextureFromSurface(appstate->renderer, tempSurface);
-        if (!optionTwoText){
-            SDL_Log("Could not create option texture! Error: %s", SDL_GetError());
-        }
-        mMenuOptions.push_back(optionTwoText);
-        SDL_DestroySurface(tempSurface);
-
-        tempSurface = TTF_RenderText_Blended(appstate->fontMedium, "EXIT", 0, COLOR_WHITE);
-        SDL_Texture* optionExitText = SDL_CreateTextureFromSurface(appstate->renderer, tempSurface);
-        if (!optionExitText){
-            SDL_Log("Could not create option texture! Error: %s", SDL_GetError());
-        }
-        mMenuOptions.push_back(optionExitText);
-        SDL_DestroySurface(tempSurface);
+        createMenuOption(appstate->renderer, appstate->fontMedium, "1-PLAYER");
+        createMenuOption(appstate->renderer, appstate->fontMedium, "2-PLAYER");
+        createMenuOption(appstate->renderer, appstate->fontMedium, "EXIT");
 
         mScreenW = appstate->screenW;
         mScreenH = appstate->screenH;
@@ -96,7 +79,7 @@ public:
         }
 
         mColorTimer += delta * COLOR_SPEED;
-        mSelectionColor = LerpColor(COLOR_WHITE, COLOR_YELLOW, (SDL_sinf(mColorTimer) + 1) / 2);
+        mSelectionColor = LerpColor(OPTION_COLOR, OPTION_COLOR_SELECTED, (SDL_sinf(mColorTimer) + 1) / 2);
     }
 
     void Render(SDL_Renderer* renderer) override {
@@ -117,18 +100,18 @@ public:
         // render menu options
         int optionsPadding = 30; // padding in px
         for (int i = 0; i < mMenuOptions.size(); i++){
-            SDL_GetTextureSize(mMenuOptions[i], &tw, &th);
+            mMenuOptions[i]->GetSize(tw, th);
             midX = (mScreenW - tw) / 2;
             midY = (mScreenH - th) / 2;
             SDL_FRect dest = {midX, midY + i * (th + optionsPadding), tw, th};
             // play animation on selected item
             if (mSelectedIndex == i){
-                SDL_SetTextureColorMod(mMenuOptions[i], mSelectionColor.r, mSelectionColor.g, mSelectionColor.b);
+                SDL_SetTextureColorMod(mMenuOptions[i]->texture, mSelectionColor.r, mSelectionColor.g, mSelectionColor.b);
             }
             else{
-                SDL_SetTextureColorMod(mMenuOptions[i], COLOR_WHITE.r, COLOR_WHITE.g, COLOR_WHITE.b);
+                SDL_SetTextureColorMod(mMenuOptions[i]->texture, OPTION_COLOR.r, OPTION_COLOR.g, OPTION_COLOR.b);
             }
-            SDL_RenderTexture(renderer, mMenuOptions[i], NULL, &dest);
+            SDL_RenderTexture(renderer, mMenuOptions[i]->texture, NULL, &dest);
         }
 
         SDL_RenderPresent(renderer);
@@ -138,22 +121,45 @@ public:
     {
         SDL_DestroyTexture(mTitleTexture);
         for (int i = 0; i < mMenuOptions.size(); i++){
-            SDL_DestroyTexture(mMenuOptions[i]);
+            SDL_DestroyTexture(mMenuOptions[i]->texture);
         }
     }
 private:
+
+    struct MenuOption 
+    {
+        SDL_Texture* texture;
+        std::function<void(App*)> callback;
+
+        void GetSize(float& w, float& h){ if(texture != nullptr) SDL_GetTextureSize(texture, &w, &h); }
+    };
+
     SceneManager& mSceneManager;
 
     SDL_Texture* mTitleTexture;
 
     int mSelectedIndex = 0;
-    std::vector<SDL_Texture*> mMenuOptions;
+    std::vector<std::unique_ptr<MenuOption>> mMenuOptions;
 
     int mScreenW;
     int mScreenH;
 
     float mColorTimer = 0.0f;
-    SDL_Color mSelectionColor = COLOR_WHITE;
+    SDL_Color mSelectionColor = OPTION_COLOR;
+
+    void createMenuOption(SDL_Renderer* renderer, TTF_Font* font, const char* text, std::function<void(App*)> callback = nullptr)
+    {
+        SDL_Surface* tempSurface;
+        tempSurface = TTF_RenderText_Blended(font, text, 0, OPTION_COLOR);
+        SDL_Texture* optionText = SDL_CreateTextureFromSurface(renderer, tempSurface);
+        if (!optionText){
+            SDL_Log("Could not create option %s texture! Error: %s", text, SDL_GetError());
+        }
+
+        mMenuOptions.push_back(std::make_unique<MenuOption>(MenuOption{optionText, callback}));
+
+        SDL_DestroySurface(tempSurface);
+    }
 };
 
 #endif // __MAIN_MENU_H__
