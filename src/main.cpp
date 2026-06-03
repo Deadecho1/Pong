@@ -174,6 +174,17 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 void SDL_AppQuit(void *appstate, SDL_AppResult result){
     App* app = static_cast<App*>(appstate);
 
+    TTF_CloseFont(app->fontSmall);
+    TTF_CloseFont(app->fontMedium);
+    TTF_CloseFont(app->fontLarge);
+    TTF_Quit();
+
+    // close gamepads
+    for (auto& [id, input] : app->gamepadToInput){
+        SDL_Gamepad* gamepad = input->RemoveController();
+        if (gamepad) SDL_CloseGamepad(gamepad);
+    }
+
     SDL_DestroyRenderer(app->renderer);
     SDL_DestroyWindow(app->window);
 
