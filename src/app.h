@@ -26,4 +26,6 @@ struct App{
     std::unordered_map<SDL_JoystickID, Input*> gamepadToInput;
 
     SceneManager sceneManager;
+
+    bool shouldExit = false;
 };

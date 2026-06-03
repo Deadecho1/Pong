@@ -25,9 +25,12 @@ public:
         SDL_DestroySurface(tempSurface);
 
         // create menu options
-        createMenuOption(appstate->renderer, appstate->fontMedium, "1-PLAYER");
-        createMenuOption(appstate->renderer, appstate->fontMedium, "2-PLAYER");
-        createMenuOption(appstate->renderer, appstate->fontMedium, "EXIT");
+        auto onePlayerOnClick = [](App* app) { SDL_Log("1-PLAYER GAME SELECTED"); };
+        auto twoPlayerOnClick = [](App* app) { SDL_Log("2-PLAYER GAME SELECTED"); };
+        auto exitOnClick = [](App* app) { app->shouldExit = true; };
+        createMenuOption(appstate->renderer, appstate->fontMedium, "1-PLAYER", onePlayerOnClick);
+        createMenuOption(appstate->renderer, appstate->fontMedium, "2-PLAYER", twoPlayerOnClick);
+        createMenuOption(appstate->renderer, appstate->fontMedium, "EXIT", exitOnClick);
 
         mScreenW = appstate->screenW;
         mScreenH = appstate->screenH;
@@ -51,7 +54,7 @@ public:
                 mColorTimer = 0.0f;
             }
             if (appstate->player1InputState.confirmPressed){
-                SDL_Log("[PLAYER1] Confirm!");
+                mMenuOptions[mSelectedIndex]->callback(appstate);
             }
             if (appstate->player1InputState.escPressed){
                 SDL_Log("[PLAYER1] Escape!");
@@ -69,12 +72,6 @@ public:
                 SDL_Log("[PLAYER2] Down!");
                 mSelectedIndex = (mSelectedIndex + 1) % mMenuOptions.size();
                 mColorTimer = 0.0f;
-            }
-            if (appstate->player2InputState.confirmPressed){
-                SDL_Log("[PLAYER2] Confirm!");
-            }
-            if (appstate->player2InputState.escPressed){
-                SDL_Log("[PLAYER2] Escape!");
             }
         }
 
