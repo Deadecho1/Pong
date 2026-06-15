@@ -17,6 +17,8 @@ add_executable(pong
         src/main_menu_scene.h
         src/app.h
         src/utilities.h
+        src/game_scene.h
+        src/paddle.h
         )
 
 target_link_libraries(pong PRIVATE 

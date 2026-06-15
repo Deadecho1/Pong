@@ -5,6 +5,7 @@
 #include "scene.h"
 #include "scene_manager.h"
 #include "utilities.h"
+#include "game_scene.h"
 
 static constexpr float COLOR_SPEED = 10.0f;
 static constexpr SDL_Color OPTION_COLOR = COLOR_WHITE;
@@ -25,11 +26,15 @@ public:
         SDL_DestroySurface(tempSurface);
 
         // create menu options
-        auto onePlayerOnClick = [](App* app) { SDL_Log("1-PLAYER GAME SELECTED"); };
-        auto twoPlayerOnClick = [](App* app) { SDL_Log("2-PLAYER GAME SELECTED"); };
+        auto playOnClick = [this](App* app)
+        {
+            mSceneManager.PushScene(
+                std::make_unique<GameScene>(mSceneManager),
+                app
+            );
+        };
         auto exitOnClick = [](App* app) { app->shouldExit = true; };
-        createMenuOption(appstate->renderer, appstate->fontMedium, "1-PLAYER", onePlayerOnClick);
-        createMenuOption(appstate->renderer, appstate->fontMedium, "2-PLAYER", twoPlayerOnClick);
+        createMenuOption(appstate->renderer, appstate->fontMedium, "PLAY", playOnClick);
         createMenuOption(appstate->renderer, appstate->fontMedium, "EXIT", exitOnClick);
 
         mScreenW = appstate->screenW;
