@@ -45,8 +45,8 @@ public:
         mScreenHeight = appstate->screenH;
 
         // position paddles in starting positions
-        mLeftPaddle.Reposition(appstate->screenW / 8, (appstate->screenH - PADDLE_HEIGHT) / 2 );
-        mRightPaddle.Reposition(appstate->screenW * 7 / 8 - PADDLE_WIDTH, (appstate->screenH - PADDLE_HEIGHT) / 2);
+        mLeftPaddle.Reposition(mScreenWidth / 8, (mScreenHeight - PADDLE_HEIGHT) / 2 );
+        mRightPaddle.Reposition(mScreenWidth * 7 / 8 - PADDLE_WIDTH, (mScreenHeight - PADDLE_HEIGHT) / 2);
 
         // initialize score and textures
         mLeftScore = 0;
@@ -64,7 +64,7 @@ public:
         }
 
         // init seperator line
-        createDashedSeperator(appstate->screenW / 2, appstate->screenH, SEPERATOR_WIDTH, SEPERATOR_NUM, SEPERATOR_MARGIN);
+        createDashedSeperator(mScreenWidth / 2, mScreenHeight, SEPERATOR_WIDTH, SEPERATOR_NUM, SEPERATOR_MARGIN);
         
         resetBall();
     }
@@ -73,20 +73,20 @@ public:
         // poll player 1 input
         if (appstate->activeInputs[0]->InputStatePoll(appstate->player1InputState)){
             if (appstate->player1InputState.up){
-                mLeftPaddle.Move(Vector2D(0, -1), appstate->screenW, appstate->screenH, delta);
+                mLeftPaddle.Move(Vector2D(0, -1), mScreenWidth, mScreenHeight, delta);
             }
             if (appstate->player1InputState.down){
-                mLeftPaddle.Move(Vector2D(0, 1), appstate->screenW, appstate->screenH, delta);
+                mLeftPaddle.Move(Vector2D(0, 1), mScreenWidth, mScreenHeight, delta);
             }
         }
 
         // poll player2 input
         if (appstate->activeInputs[1]->InputStatePoll(appstate->player2InputState)){
             if (appstate->player2InputState.up){
-                mRightPaddle.Move(Vector2D(0, -1), appstate->screenW, appstate->screenH, delta);
+                mRightPaddle.Move(Vector2D(0, -1), mScreenWidth, mScreenHeight, delta);
             }
             if (appstate->player2InputState.down){
-                mRightPaddle.Move(Vector2D(0, 1), appstate->screenW, appstate->screenH, delta);
+                mRightPaddle.Move(Vector2D(0, 1), mScreenWidth, mScreenHeight, delta);
             }
         }
 
