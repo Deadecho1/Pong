@@ -168,6 +168,10 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     currScene.Update(app, delta);
     currScene.Render(app->renderer);
 
+    if(currScene.IsRequestExit()){
+        app->sceneManager.PopScene();
+    }
+
     if (app->shouldExit){
         return SDL_APP_SUCCESS;
     }

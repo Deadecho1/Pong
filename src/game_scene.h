@@ -29,7 +29,10 @@ public:
     static constexpr float BALL_SPEED = 300.0f;
     static constexpr int BALL_SIZE = 10;
 
+    // game consts
+    static constexpr int MAX_SCORE = 5;
     static constexpr SDL_Color SCORE_COLOR = COLOR_WHITE;
+    static constexpr SDL_Color VICTORY_COLOR = COLOR_YELLOW;
 
     explicit GameScene(SceneManager& scene_manager) 
                 : mSceneManager(scene_manager),
@@ -38,6 +41,16 @@ public:
                   mRightPaddle(0, 0, PADDLE_WIDTH, PADDLE_HEIGHT, PADDLE_VELOCITY),
                   mBall(BALL_SPEED, BALL_SIZE)  
     {
+    }
+
+    ~GameScene(){
+        for (SDL_Texture* text : mNumberTextures){
+            SDL_DestroyTexture(text);
+        }
+
+        SDL_DestroyTexture(mPlayer1Text);
+        SDL_DestroyTexture(mPlayer2Text);
+        SDL_DestroyTexture(mVictoryText);
     }
 
     void Init(App* appstate) override {
@@ -63,6 +76,20 @@ public:
             SDL_DestroySurface(tempSurface);
         }
 
+        // create textures for victory text
+        std::string player1Text = "PLAYER-1";
+        std::string player2Text = "PLAYER-2";
+        std::string victoryText = "WINS";
+        SDL_Surface* temp = TTF_RenderText_Blended(appstate->fontLarge, player1Text.c_str(), player1Text.size(), COLOR_WHITE);
+        mPlayer1Text = SDL_CreateTextureFromSurface(appstate->renderer, temp);
+        SDL_DestroySurface(temp);
+        temp = TTF_RenderText_Blended(appstate->fontLarge, player2Text.c_str(), player2Text.size(), COLOR_WHITE);
+        mPlayer2Text = SDL_CreateTextureFromSurface(appstate->renderer, temp);
+        SDL_DestroySurface(temp);
+        temp = TTF_RenderText_Blended(appstate->fontLarge, victoryText.c_str(), victoryText.size(), VICTORY_COLOR);
+        mVictoryText = SDL_CreateTextureFromSurface(appstate->renderer, temp);
+        SDL_DestroySurface(temp);
+        
         // init seperator line
         createDashedSeperator(mScreenWidth / 2, mScreenHeight, SEPERATOR_WIDTH, SEPERATOR_NUM, SEPERATOR_MARGIN);
         
@@ -70,40 +97,53 @@ public:
     }
 
     void Update(App *appstate, float delta) override {
-        // poll player 1 input
-        if (appstate->activeInputs[0]->InputStatePoll(appstate->player1InputState)){
-            if (appstate->player1InputState.up){
-                mLeftPaddle.Move(Vector2D(0, -1), mScreenWidth, mScreenHeight, delta);
-            }
-            if (appstate->player1InputState.down){
-                mLeftPaddle.Move(Vector2D(0, 1), mScreenWidth, mScreenHeight, delta);
-            }
-        }
 
-        // poll player2 input
-        if (appstate->activeInputs[1]->InputStatePoll(appstate->player2InputState)){
-            if (appstate->player2InputState.up){
-                mRightPaddle.Move(Vector2D(0, -1), mScreenWidth, mScreenHeight, delta);
-            }
-            if (appstate->player2InputState.down){
-                mRightPaddle.Move(Vector2D(0, 1), mScreenWidth, mScreenHeight, delta);
+        if (mIsGameOver){
+            if (appstate->activeInputs[0]->InputStatePoll(appstate->player1InputState)){
+                if (appstate->player1InputState.confirmPressed){
+                    mRequestExit = true;
+                }
             }
         }
+        else{
+            // poll player 1 input
+            if (appstate->activeInputs[0]->InputStatePoll(appstate->player1InputState)){
+                if (appstate->player1InputState.up){
+                    mLeftPaddle.Move(Vector2D(0, -1), mScreenWidth, mScreenHeight, delta);
+                }
+                if (appstate->player1InputState.down){
+                    mLeftPaddle.Move(Vector2D(0, 1), mScreenWidth, mScreenHeight, delta);
+                }
+            }
 
-        mBall.Update(delta, {&mLeftPaddle, &mRightPaddle}, mScreenHeight);
+            // poll player2 input
+            if (appstate->activeInputs[1]->InputStatePoll(appstate->player2InputState)){
+                if (appstate->player2InputState.up){
+                    mRightPaddle.Move(Vector2D(0, -1), mScreenWidth, mScreenHeight, delta);
+                }
+                if (appstate->player2InputState.down){
+                    mRightPaddle.Move(Vector2D(0, 1), mScreenWidth, mScreenHeight, delta);
+                }
+            }
 
-        int ballX, ballY;
-        mBall.GetPosition(ballX, ballY);
-        // left score
-        if (ballX > mScreenWidth){
-            mLeftScore += 1;
-            resetBall();
+            mBall.Update(delta, {&mLeftPaddle, &mRightPaddle}, mScreenHeight);
+
+            int ballX, ballY;
+            mBall.GetPosition(ballX, ballY);
+            // left score
+            if (ballX > mScreenWidth){
+                mLeftScore += 1;
+                resetBall();
+            }
+            // right score
+            else if (ballX < 0){
+                mRightScore += 1;
+                resetBall();
+            }
+
+            checkGameOver(MAX_SCORE);
         }
-        // right score
-        else if (ballX < 0){
-            mRightScore += 1;
-            resetBall();
-        }
+        
     }
 
     void Render(SDL_Renderer* renderer) override {
@@ -124,6 +164,10 @@ public:
         renderScore(renderer, mRightScore, mScreenWidth * RIGHT_SCORE_POS_X, mScreenHeight * SCORE_POS_Y, 4);
 
         mBall.Render(renderer);
+
+        if (mIsGameOver){
+            renderGameOver(renderer);
+        }
 
         SDL_RenderPresent(renderer);
     }
@@ -148,6 +192,12 @@ private:
     unsigned int mRightScore;
 
     std::vector<SDL_Texture*> mNumberTextures;
+    SDL_Texture* mPlayer1Text;
+    SDL_Texture* mPlayer2Text;
+    SDL_Texture* mVictoryText;
+
+    bool mIsGameOver = false;
+    bool mLeftVictory = false;
 
     void createDashedSeperator(int xPos, int lineHeight, int width, int density, int margin){
         float seperatorHeight = (lineHeight / density) - (margin * 2);
@@ -190,5 +240,30 @@ private:
         int rand = SDL_rand(2); // 0 or 1 randomly
         mBall.SetVelocity(Vector2D((rand * 2 - 1) * BALL_SPEED, 0));
         mBall.SetMaxVelocity(BALL_SPEED);
+    }
+
+    void checkGameOver(int maxScore){
+        if (mLeftScore >= maxScore){
+            mLeftVictory = true;
+            mIsGameOver = true;
+        }
+        else if (mRightScore >= maxScore){
+            mLeftVictory = false;
+            mIsGameOver = true;
+        }
+    }
+
+    void renderGameOver(SDL_Renderer* renderer){
+        float tw, th;
+        SDL_FRect dest;
+        SDL_Texture* victorText = mLeftVictory ? mPlayer1Text : mPlayer2Text;
+
+        SDL_GetTextureSize(victorText, &tw, &th);
+        dest = { ((float)mScreenWidth - tw) / 2, (float)mScreenHeight / 4, tw, th };
+        SDL_RenderTexture(renderer, victorText, NULL, &dest);
+        
+        SDL_GetTextureSize(mVictoryText, &tw, &th);
+        dest = { ((float)mScreenWidth - tw) / 2, (float)mScreenHeight / 2, tw, th };
+        SDL_RenderTexture(renderer, mVictoryText, NULL, &dest);
     }
 };
