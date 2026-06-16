@@ -7,6 +7,7 @@
 #include "scene_manager.h"
 #include "utilities.h"
 #include "paddle.h"
+#include "ball.h"
 
 class GameScene: public Scene
 {
@@ -24,13 +25,18 @@ public:
     static constexpr float RIGHT_SCORE_POS_X = 0.7f;
     static constexpr float SCORE_POS_Y = 1.0f / 12.0f;
 
+    // ball consts
+    static constexpr float BALL_SPEED = 300.0f;
+    static constexpr int BALL_SIZE = 10;
+
     static constexpr SDL_Color SCORE_COLOR = COLOR_WHITE;
 
     explicit GameScene(SceneManager& scene_manager) 
                 : mSceneManager(scene_manager),
                   mNumberTextures(10, nullptr),
                   mLeftPaddle(0, 0, PADDLE_WIDTH, PADDLE_HEIGHT, PADDLE_VELOCITY),
-                  mRightPaddle(0, 0, PADDLE_WIDTH, PADDLE_HEIGHT, PADDLE_VELOCITY)  
+                  mRightPaddle(0, 0, PADDLE_WIDTH, PADDLE_HEIGHT, PADDLE_VELOCITY),
+                  mBall(BALL_SPEED, BALL_SIZE)  
     {
     }
 
@@ -59,6 +65,8 @@ public:
 
         // init seperator line
         createDashedSeperator(appstate->screenW / 2, appstate->screenH, SEPERATOR_WIDTH, SEPERATOR_NUM, SEPERATOR_MARGIN);
+        
+        resetBall();
     }
 
     void Update(App *appstate, float delta) override {
@@ -81,6 +89,21 @@ public:
                 mRightPaddle.Move(Vector2D(0, 1), appstate->screenW, appstate->screenH, delta);
             }
         }
+
+        mBall.Update(delta, {&mLeftPaddle, &mRightPaddle}, mScreenHeight);
+
+        int ballX, ballY;
+        mBall.GetPosition(ballX, ballY);
+        // left score
+        if (ballX > mScreenWidth){
+            mLeftScore += 1;
+            resetBall();
+        }
+        // right score
+        else if (ballX < 0){
+            mRightScore += 1;
+            resetBall();
+        }
     }
 
     void Render(SDL_Renderer* renderer) override {
@@ -100,6 +123,8 @@ public:
         renderScore(renderer, mLeftScore, mScreenWidth * LEFT_SCORE_POS_X, mScreenHeight * SCORE_POS_Y, 4);
         renderScore(renderer, mRightScore, mScreenWidth * RIGHT_SCORE_POS_X, mScreenHeight * SCORE_POS_Y, 4);
 
+        mBall.Render(renderer);
+
         SDL_RenderPresent(renderer);
     }
 
@@ -116,6 +141,8 @@ private:
     Paddle mLeftPaddle;
     Paddle mRightPaddle;
     std::vector<SDL_FRect> mSeperatorRects;
+
+    Ball mBall;
 
     unsigned int mLeftScore;
     unsigned int mRightScore;
@@ -156,5 +183,12 @@ private:
             SDL_RenderTexture(renderer, mNumberTextures[c - '0'], NULL, &dest);
             currX += tw + margin;
         }
+    }
+
+    void resetBall(){
+        mBall.Reposition((mScreenWidth - BALL_SIZE) / 2, (mScreenHeight - BALL_SIZE) / 2);
+        int rand = SDL_rand(2); // 0 or 1 randomly
+        mBall.SetVelocity(Vector2D((rand * 2 - 1) * BALL_SPEED, 0));
+        mBall.SetMaxVelocity(BALL_SPEED);
     }
 };

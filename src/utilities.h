@@ -3,6 +3,8 @@
 #include <cmath>
 #include "SDL3/SDL.h"
 
+constexpr float PI = 3.14159265f;
+
 constexpr SDL_Color COLOR_WHITE = {255, 255, 255, 255};
 constexpr SDL_Color COLOR_BLACK = {0, 0, 0, 0};
 constexpr SDL_Color COLOR_YELLOW = {255, 255, 0, 255};

@@ -18,6 +18,8 @@ public:
     // dir should be a normalized vector
     void Move(const Vector2D& dir, int boundsX, int boundsY, float deltaTime)
     {
+        float origPosY = mPosY;
+
         float xMovement = dir.x * mMaxVelocity * deltaTime;
         mPosX += xMovement;
         if (mPosX > boundsX - mCollisionBox.w || mPosX < 0){
@@ -32,6 +34,16 @@ public:
 
         mCollisionBox.x = static_cast<int>(mPosX);
         mCollisionBox.y = static_cast<int>(mPosY);
+
+        if (origPosY < mPosY){
+            mVel.y = mMaxVelocity;
+        }
+        else if (origPosY > mPosY){
+            mVel.y = -mMaxVelocity;
+        }
+        else{
+            mVel.y = 0;
+        }
     }
 
     void Reposition(int x, int y)
@@ -54,4 +66,8 @@ public:
         SDL_SetRenderDrawColor(renderer, 255, 255, 255 ,255);
         SDL_RenderFillRect(renderer, &renderRect);
     }
+
+    const SDL_Rect& GetRect() { return mCollisionBox; }
+
+    const Vector2D& GetVelocity() { return mVel; }
 };
