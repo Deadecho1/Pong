@@ -2,12 +2,13 @@
 
 #include <string>
 #include <vector>
-#include "SDL3/SDL.h"
-#include "SDL3_ttf/SDL_ttf.h"
+#include <SDL3/SDL.h>
+
 #include "scene_manager.h"
 #include "utilities.h"
 #include "paddle.h"
 #include "ball.h"
+#include "texture.h"
 
 class GameScene: public Scene
 {
@@ -36,21 +37,11 @@ public:
 
     explicit GameScene(SceneManager& scene_manager) 
                 : mSceneManager(scene_manager),
-                  mNumberTextures(10, nullptr),
+                  mNumberTextures(10),
                   mLeftPaddle(0, 0, PADDLE_WIDTH, PADDLE_HEIGHT, PADDLE_VELOCITY),
                   mRightPaddle(0, 0, PADDLE_WIDTH, PADDLE_HEIGHT, PADDLE_VELOCITY),
                   mBall(BALL_SPEED, BALL_SIZE)  
     {
-    }
-
-    ~GameScene(){
-        for (SDL_Texture* text : mNumberTextures){
-            SDL_DestroyTexture(text);
-        }
-
-        SDL_DestroyTexture(mPlayer1Text);
-        SDL_DestroyTexture(mPlayer2Text);
-        SDL_DestroyTexture(mVictoryText);
     }
 
     void Init(App* appstate) override {
@@ -66,29 +57,27 @@ public:
         mRightScore = 0;
         for (int i = 0; i < mNumberTextures.size(); i++){
             std::string numText = std::to_string(i);
-            SDL_Surface* tempSurface = TTF_RenderText_Blended(appstate->fontMedium, numText.c_str(), 0, SCORE_COLOR);
-            SDL_Texture* numTexture = SDL_CreateTextureFromSurface(appstate->renderer, tempSurface);
-            if (!numTexture){
+            
+            if (!mNumberTextures[i].LoadText(appstate->renderer, numText.c_str(), appstate->fontMedium, SCORE_COLOR)){
                 SDL_Log("Could not create number texture! Error: %s", SDL_GetError());
             }
-            mNumberTextures[i] = numTexture;
-
-            SDL_DestroySurface(tempSurface);
         }
 
         // create textures for victory text
         std::string player1Text = "PLAYER-1";
         std::string player2Text = "PLAYER-2";
         std::string victoryText = "WINS";
-        SDL_Surface* temp = TTF_RenderText_Blended(appstate->fontLarge, player1Text.c_str(), player1Text.size(), COLOR_WHITE);
-        mPlayer1Text = SDL_CreateTextureFromSurface(appstate->renderer, temp);
-        SDL_DestroySurface(temp);
-        temp = TTF_RenderText_Blended(appstate->fontLarge, player2Text.c_str(), player2Text.size(), COLOR_WHITE);
-        mPlayer2Text = SDL_CreateTextureFromSurface(appstate->renderer, temp);
-        SDL_DestroySurface(temp);
-        temp = TTF_RenderText_Blended(appstate->fontLarge, victoryText.c_str(), victoryText.size(), VICTORY_COLOR);
-        mVictoryText = SDL_CreateTextureFromSurface(appstate->renderer, temp);
-        SDL_DestroySurface(temp);
+        if (!mPlayer1Text.LoadText(appstate->renderer, player1Text.c_str(), appstate->fontLarge, COLOR_WHITE)){
+            SDL_Log("Could not create player 1 victory texture! Error: %s", SDL_GetError());
+        }
+        
+        if (!mPlayer2Text.LoadText(appstate->renderer, player2Text.c_str(), appstate->fontLarge, COLOR_WHITE)){
+            SDL_Log("Could not create player 2 victory texture! Error: %s", SDL_GetError());
+        }
+
+        if (!mVictoryText.LoadText(appstate->renderer, victoryText.c_str(), appstate->fontLarge, VICTORY_COLOR)){
+            SDL_Log("Could not create player 2 victory texture! Error: %s", SDL_GetError());
+        }
         
         // init seperator line
         createDashedSeperator(mScreenWidth / 2, mScreenHeight, SEPERATOR_WIDTH, SEPERATOR_NUM, SEPERATOR_MARGIN);
@@ -191,10 +180,10 @@ private:
     unsigned int mLeftScore;
     unsigned int mRightScore;
 
-    std::vector<SDL_Texture*> mNumberTextures;
-    SDL_Texture* mPlayer1Text;
-    SDL_Texture* mPlayer2Text;
-    SDL_Texture* mVictoryText;
+    std::vector<Texture> mNumberTextures;
+    Texture mPlayer1Text;
+    Texture mPlayer2Text;
+    Texture mVictoryText;
 
     bool mIsGameOver = false;
     bool mLeftVictory = false;
@@ -219,7 +208,7 @@ private:
         float totalWidth = 0, digitHeight = 0;
         for (char c : digits) {
             float tw, th;
-            SDL_GetTextureSize(mNumberTextures[c - '0'], &tw, &th);
+            mNumberTextures[c - '0'].GetSize(tw, th);
             totalWidth += tw;
             digitHeight = th;
         }
@@ -228,9 +217,9 @@ private:
         float currY = posY - digitHeight / 2;
         for (char c : digits) {
             float tw, th;
-            SDL_GetTextureSize(mNumberTextures[c - '0'], &tw, &th);
+            mNumberTextures[c - '0'].GetSize(tw, th);
             SDL_FRect dest = {currX, currY, tw, th};
-            SDL_RenderTexture(renderer, mNumberTextures[c - '0'], NULL, &dest);
+            mNumberTextures[c - '0'].Render(renderer, dest);
             currX += tw + margin;
         }
     }
@@ -254,16 +243,15 @@ private:
     }
 
     void renderGameOver(SDL_Renderer* renderer){
-        float tw, th;
-        SDL_FRect dest;
-        SDL_Texture* victorText = mLeftVictory ? mPlayer1Text : mPlayer2Text;
+        Texture &victorText = mLeftVictory ? mPlayer1Text : mPlayer2Text;
 
-        SDL_GetTextureSize(victorText, &tw, &th);
-        dest = { ((float)mScreenWidth - tw) / 2, (float)mScreenHeight / 4, tw, th };
-        SDL_RenderTexture(renderer, victorText, NULL, &dest);
+        float tw, th;
+        victorText.GetSize(tw, th);
+        SDL_FRect dest = { ((float)mScreenWidth - tw) / 2, (float)mScreenHeight / 4, tw, th };
+        victorText.Render(renderer, dest);
         
-        SDL_GetTextureSize(mVictoryText, &tw, &th);
+        mVictoryText.GetSize(tw, th);
         dest = { ((float)mScreenWidth - tw) / 2, (float)mScreenHeight / 2, tw, th };
-        SDL_RenderTexture(renderer, mVictoryText, NULL, &dest);
+        mVictoryText.Render(renderer, dest);
     }
 };

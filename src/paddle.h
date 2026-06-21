@@ -1,15 +1,10 @@
 #pragma once
 
-#include "SDL3/SDL.h"
+#include <SDL3/SDL.h>
+
 #include "utilities.h"
 
 class Paddle{
-private:
-    SDL_Rect mCollisionBox; // will also be used for rendering
-    float mPosX, mPosY; // top left of rectangle
-    Vector2D mVel;
-    float mMaxVelocity;
-
 public:
     Paddle(int initPosX, int initPosY, int width, int height, int maxVelocity): 
         mPosX(initPosX), mPosY(initPosY), mCollisionBox({ initPosX, initPosY, width, height}), 
@@ -70,4 +65,11 @@ public:
     const SDL_Rect& GetRect() { return mCollisionBox; }
 
     const Vector2D& GetVelocity() { return mVel; }
+
+private:
+    SDL_Rect mCollisionBox; // will also be used for rendering
+    float mPosX, mPosY; // top left of rectangle
+    Vector2D mVel;
+    float mMaxVelocity;
+
 };

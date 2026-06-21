@@ -3,6 +3,7 @@
 #include <SDL3/SDL_main.h>
 #include <unordered_map>
 #include <vector>
+
 #include "input.h"
 #include "app.h"
 #include "main_menu_scene.h"

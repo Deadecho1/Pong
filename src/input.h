@@ -1,5 +1,4 @@
-#ifndef __INPUT_H__
-#define __INPUT_H__
+#pragma once
 
 #include <SDL3/SDL.h>
 
@@ -141,5 +140,3 @@ bool Input::InputStatePoll(Input::InputState& inputOut)
     
     return true;
 }
-
-#endif // __INPUT_H__

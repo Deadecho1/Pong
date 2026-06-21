@@ -1,7 +1,9 @@
 #pragma once
+
 #include <vector>
 #include <cmath>
-#include "SDL3/SDL.h"
+#include <SDL3/SDL.h>
+
 #include "utilities.h"
 #include "paddle.h"
 

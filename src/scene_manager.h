@@ -1,5 +1,4 @@
-#ifndef __SCENE_MANAGER_H__
-#define __SCENE_MANAGER_H__
+#pragma once
 
 #include <vector>
 #include <memory>
@@ -32,4 +31,3 @@ class SceneManager
     private:
         std::vector<std::unique_ptr<Scene>> mSceneStack;
 };
-#endif // __SCENE_MANAGER_H__

@@ -1,5 +1,4 @@
-#ifndef __SCENE_H__
-#define __SCENE_H__
+#pragma once
 
 #include "SDL3/SDL.h"
 
@@ -20,5 +19,3 @@ class Scene
     protected:
         bool mRequestExit = false;
 };
-
-#endif // __SCENE_H__

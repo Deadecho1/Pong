@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(SDL3 REQUIRED)
 find_package(SDL3_ttf REQUIRED)
+find_package(SDL3_image REQUIRED)
 
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
 
@@ -20,8 +21,10 @@ add_executable(pong
         src/game_scene.h
         src/paddle.h
         src/ball.h
+        src/texture.h
         )
 
 target_link_libraries(pong PRIVATE 
                 SDL3::SDL3
-                SDL3_ttf::SDL3_ttf)
+                SDL3_ttf::SDL3_ttf
+                SDL3_image::SDL3_image)

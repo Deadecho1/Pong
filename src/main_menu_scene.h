@@ -1,11 +1,21 @@
-#ifndef __MAIN_MENU_H__
-#define __MAIN_MENU_H__
+#pragma once
 
 #include <functional>
+#include <string>
+#include <SDL3/SDL.h>
+
 #include "scene.h"
 #include "scene_manager.h"
 #include "utilities.h"
 #include "game_scene.h"
+#include "texture.h"
+
+static const std::string TITLE_TEXT = "PONG";
+static const std::string OPTION1_TEXT = "PLAY";
+static const std::string OPTION2_TEXT = "EXIT";
+
+static constexpr int TITLE_PADDING = 100;
+static constexpr int OPTIONS_PADDING = 30;
 
 static constexpr float COLOR_SPEED = 10.0f;
 static constexpr SDL_Color OPTION_COLOR = COLOR_WHITE;
@@ -16,14 +26,10 @@ public:
     explicit MainMenuScene(SceneManager& scene_manager) : mSceneManager(scene_manager) {}
 
     void Init(App* appstate) override {
-        SDL_Surface* tempSurface;
         // create title
-        tempSurface = TTF_RenderText_Blended(appstate->fontLarge, "PONG", 0, COLOR_WHITE);
-        mTitleTexture = SDL_CreateTextureFromSurface(appstate->renderer, tempSurface);
-        if (!mTitleTexture){
+        if (!mTitleTexture.LoadText(appstate->renderer, TITLE_TEXT, appstate->fontLarge, COLOR_WHITE)){
             SDL_Log("Could not create title texture! Error: %s", SDL_GetError());
         }
-        SDL_DestroySurface(tempSurface);
 
         // create menu options
         auto playOnClick = [this](App* app)
@@ -34,16 +40,14 @@ public:
             );
         };
         auto exitOnClick = [](App* app) { app->shouldExit = true; };
-        createMenuOption(appstate->renderer, appstate->fontMedium, "PLAY", playOnClick);
-        createMenuOption(appstate->renderer, appstate->fontMedium, "EXIT", exitOnClick);
+        createMenuOption(appstate->renderer, appstate->fontMedium, OPTION1_TEXT, playOnClick);
+        createMenuOption(appstate->renderer, appstate->fontMedium, OPTION2_TEXT, exitOnClick);
 
         mScreenW = appstate->screenW;
         mScreenH = appstate->screenH;
     }
 
-    void OnEvent(App* appstate, SDL_Event *event) override {
-
-    }
+    void OnEvent(App* appstate, SDL_Event *event) override {}
 
     void Update(App* appstate, float delta) override {
         // poll player 1 input
@@ -88,57 +92,48 @@ public:
         // render black background
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
         SDL_RenderClear(renderer);
-
         
-        float midX, midY;
-        float tw, th;
         // render title
-        float titlePadding = 100;
-        SDL_GetTextureSize(mTitleTexture, &tw, &th);
-        midX = (mScreenW - tw) / 2;
-        SDL_FRect dest = {midX, titlePadding, tw, th};
-        SDL_RenderTexture(renderer, mTitleTexture, NULL, &dest);
+        float tw, th;
+        mTitleTexture.GetSize(tw, th);
+        float midX = (mScreenW - tw) / 2;
+        SDL_FRect dest = {midX, TITLE_PADDING, tw, th};
+        mTitleTexture.Render(renderer, dest);
 
         // render menu options
-        int optionsPadding = 30; // padding in px
         for (int i = 0; i < mMenuOptions.size(); i++){
             mMenuOptions[i]->GetSize(tw, th);
-            midX = (mScreenW - tw) / 2;
-            midY = (mScreenH - th) / 2;
-            SDL_FRect dest = {midX, midY + i * (th + optionsPadding), tw, th};
+            float midX = (mScreenW - tw) / 2;
+            float midY = (mScreenH - th) / 2;
+            SDL_FRect dest = {midX, OPTIONS_PADDING + midY + i * (th + OPTIONS_PADDING), tw, th};
+
             // play animation on selected item
             if (mSelectedIndex == i){
-                SDL_SetTextureColorMod(mMenuOptions[i]->texture, mSelectionColor.r, mSelectionColor.g, mSelectionColor.b);
+                mMenuOptions[i]->texture.SetColorMod(mSelectionColor.r, mSelectionColor.g, mSelectionColor.b);
             }
             else{
-                SDL_SetTextureColorMod(mMenuOptions[i]->texture, OPTION_COLOR.r, OPTION_COLOR.g, OPTION_COLOR.b);
+                mMenuOptions[i]->texture.SetColorMod(OPTION_COLOR.r, OPTION_COLOR.g, OPTION_COLOR.b);
             }
-            SDL_RenderTexture(renderer, mMenuOptions[i]->texture, NULL, &dest);
+
+            mMenuOptions[i]->texture.Render(renderer, dest);
         }
 
         SDL_RenderPresent(renderer);
     }
 
-    ~MainMenuScene()
-    {
-        SDL_DestroyTexture(mTitleTexture);
-        for (int i = 0; i < mMenuOptions.size(); i++){
-            SDL_DestroyTexture(mMenuOptions[i]->texture);
-        }
-    }
 private:
 
     struct MenuOption 
     {
-        SDL_Texture* texture;
+        Texture texture;
         std::function<void(App*)> callback;
 
-        void GetSize(float& w, float& h){ if(texture != nullptr) SDL_GetTextureSize(texture, &w, &h); }
+        void GetSize(float& w, float& h){ texture.GetSize(w, h); }
     };
 
     SceneManager& mSceneManager;
 
-    SDL_Texture* mTitleTexture;
+    Texture mTitleTexture;
 
     int mSelectedIndex = 0;
     std::vector<std::unique_ptr<MenuOption>> mMenuOptions;
@@ -149,19 +144,15 @@ private:
     float mColorTimer = 0.0f;
     SDL_Color mSelectionColor = OPTION_COLOR;
 
-    void createMenuOption(SDL_Renderer* renderer, TTF_Font* font, const char* text, std::function<void(App*)> callback = nullptr)
+    void createMenuOption(SDL_Renderer* renderer, TTF_Font* font, std::string text, std::function<void(App*)> callback = nullptr)
     {
-        SDL_Surface* tempSurface;
-        tempSurface = TTF_RenderText_Blended(font, text, 0, OPTION_COLOR);
-        SDL_Texture* optionText = SDL_CreateTextureFromSurface(renderer, tempSurface);
-        if (!optionText){
+        std::unique_ptr<MenuOption> option = std::make_unique<MenuOption>();
+        if(!option->texture.LoadText(renderer, text, font, OPTION_COLOR)){
             SDL_Log("Could not create option %s texture! Error: %s", text, SDL_GetError());
         }
 
-        mMenuOptions.push_back(std::make_unique<MenuOption>(MenuOption{optionText, callback}));
+        option->callback = callback;
 
-        SDL_DestroySurface(tempSurface);
+        mMenuOptions.push_back(std::move(option));
     }
 };
-
-#endif // __MAIN_MENU_H__
