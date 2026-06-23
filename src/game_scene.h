@@ -29,6 +29,7 @@ public:
     // ball consts
     static constexpr float BALL_SPEED = 300.0f;
     static constexpr int BALL_SIZE = 10;
+    static constexpr double BALL_START_ANGLE = PI / 3; // angle ball starts with in radians(randomly up or down)
 
     // game consts
     static constexpr int MAX_SCORE = 5;
@@ -228,8 +229,10 @@ private:
 
     void resetBall(){
         mBall.Reposition((mScreenWidth - BALL_SIZE) / 2, (mScreenHeight - BALL_SIZE) / 2);
-        int rand = SDL_rand(2); // 0 or 1 randomly
-        mBall.SetVelocity(Vector2D((rand * 2 - 1) * BALL_SPEED, 0));
+        int randDirection = SDL_rand(2); // 0 or 1 randomly
+        int randAngle = SDL_rand(2);
+        mBall.SetVelocity(Vector2D((randDirection * 2 - 1) * BALL_SPEED * std::sin(BALL_START_ANGLE), 
+                                   (randAngle * 2 - 1) * BALL_SPEED * std::cos(BALL_START_ANGLE)));
         mBall.SetMaxVelocity(BALL_SPEED);
     }
 
