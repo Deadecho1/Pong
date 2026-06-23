@@ -186,6 +186,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     }
 
     if (app->shouldExit){
+        SDL_Delay(500); // so select sound is heard (hack?)
         return SDL_APP_SUCCESS;
     }
     
