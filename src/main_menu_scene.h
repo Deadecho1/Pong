@@ -160,7 +160,7 @@ private:
     {
         std::unique_ptr<MenuOption> option = std::make_unique<MenuOption>();
         if(!option->texture.LoadText(renderer, text, font, OPTION_COLOR)){
-            SDL_Log("Could not create option %s texture! Error: %s", text, SDL_GetError());
+            SDL_Log("Could not create option %s texture! Error: %s", text.c_str(), SDL_GetError());
         }
 
         option->callback = callback;

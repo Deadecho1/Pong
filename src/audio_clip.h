@@ -22,7 +22,7 @@ public:
     {
         mAudioClip = MIX_LoadAudio(mixer, path.c_str(), false);
         if (!mAudioClip){
-            SDL_Log("Could not load audio clip %s, error: %s", path, SDL_GetError());
+            SDL_Log("Could not load audio clip %s, error: %s", path.c_str(), SDL_GetError());
             return false;
             
         }
