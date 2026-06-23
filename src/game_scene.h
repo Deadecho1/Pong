@@ -33,6 +33,7 @@ public:
 
     // game consts
     static constexpr int MAX_SCORE = 5;
+    static constexpr int START_TIMER = 3; // in seconds
     static constexpr SDL_Color SCORE_COLOR = COLOR_WHITE;
     static constexpr SDL_Color VICTORY_COLOR = COLOR_YELLOW;
 
@@ -86,15 +87,25 @@ public:
         // init ball
         mBall.Init(appstate->mixer);
         resetBall();
+
+        mIsGameIntro = true;
+        mGameStartTime = SDL_GetTicks();
+        mCurrCountdown = START_TIMER;
     }
 
     void Update(App *appstate, float delta) override {
-
         if (mIsGameOver){
             if (appstate->activeInputs[0]->InputStatePoll(appstate->player1InputState)){
                 if (appstate->player1InputState.confirmPressed){
                     mRequestExit = true;
                 }
+            }
+        }
+        else if (mIsGameIntro){
+            float gameStartDelta = (SDL_GetTicks() - mGameStartTime) / 1000.0f;
+            mCurrCountdown = static_cast<int>(START_TIMER + 1 - gameStartDelta);
+            if (mCurrCountdown == 0){
+                mIsGameIntro = false;
             }
         }
         else{
@@ -161,6 +172,10 @@ public:
             renderGameOver(renderer);
         }
 
+        if(mIsGameIntro){
+            renderCountDown(renderer, mCurrCountdown, mScreenWidth / 2, mScreenHeight / 2);
+        }
+
         SDL_RenderPresent(renderer);
     }
 
@@ -188,8 +203,12 @@ private:
     Texture mPlayer2Text;
     Texture mVictoryText;
 
+    bool mIsGameIntro = false;
     bool mIsGameOver = false;
     bool mLeftVictory = false;
+
+    Uint64 mGameStartTime = -1;
+    int mCurrCountdown = -1;
 
     void createDashedSeperator(int xPos, int lineHeight, int width, int density, int margin){
         float seperatorHeight = (lineHeight / density) - (margin * 2);
@@ -203,6 +222,19 @@ private:
                 }
             );
         }
+    }
+
+    // current time should not exceed 9
+    void renderCountDown(SDL_Renderer* renderer, int currentTime, int posX, int posY){
+        if (currentTime > 9){
+            return;
+        }
+
+        float tw, th;
+        
+        mNumberTextures[currentTime].GetSize(tw, th);
+        SDL_FRect dest = {posX - tw / 2, posY - th / 2, tw, th};
+        mNumberTextures[currentTime].Render(renderer, dest);
     }
 
     void renderScore(SDL_Renderer* renderer, int score, int posX, int posY, int margin){
