@@ -3,12 +3,14 @@
 #include <functional>
 #include <string>
 #include <SDL3/SDL.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 #include "scene.h"
 #include "scene_manager.h"
 #include "utilities.h"
 #include "game_scene.h"
 #include "texture.h"
+#include "audio_clip.h"
 
 static const std::string TITLE_TEXT = "PONG";
 static const std::string OPTION1_TEXT = "PLAY";
@@ -45,6 +47,10 @@ public:
 
         mScreenW = appstate->screenW;
         mScreenH = appstate->screenH;
+
+        // load audio
+        mNavAudio.LoadClip(appstate->mixer, (AUDIO_PATH + "menu_nav.mp3"));
+        mSelectAudio.LoadClip(appstate->mixer, (AUDIO_PATH + "menu_select.mp3"));
     }
 
     void OnEvent(App* appstate, SDL_Event *event) override {}
@@ -53,32 +59,38 @@ public:
         // poll player 1 input
         if (appstate->activeInputs[0]->InputStatePoll(appstate->player1InputState)){
             if (appstate->player1InputState.upPressed){
-                SDL_Log("[PLAYER1] Up!");
+                mNavAudio.Play();
+
                 mSelectedIndex = (mSelectedIndex - 1 + mMenuOptions.size()) % mMenuOptions.size();
                 mColorTimer = 0.0f;
             }
             if (appstate->player1InputState.downPressed){
-                SDL_Log("[PLAYER1] Down!");
+                mNavAudio.Play();
+
                 mSelectedIndex = (mSelectedIndex + 1) % mMenuOptions.size();
                 mColorTimer = 0.0f;
             }
             if (appstate->player1InputState.confirmPressed){
+                mSelectAudio.Play();
+
                 mMenuOptions[mSelectedIndex]->callback(appstate);
             }
             if (appstate->player1InputState.escPressed){
-                SDL_Log("[PLAYER1] Escape!");
+                
             }
         }
 
         // poll player2 input
         if (appstate->activeInputs[1]->InputStatePoll(appstate->player2InputState)){
             if (appstate->player2InputState.upPressed){
-                SDL_Log("[PLAYER2] Up!");
+                mNavAudio.Play();
+
                 mSelectedIndex = (mSelectedIndex - 1 + mMenuOptions.size()) % mMenuOptions.size();
                 mColorTimer = 0.0f;
             }
             if (appstate->player2InputState.downPressed){
-                SDL_Log("[PLAYER2] Down!");
+                mNavAudio.Play();
+
                 mSelectedIndex = (mSelectedIndex + 1) % mMenuOptions.size();
                 mColorTimer = 0.0f;
             }
@@ -155,4 +167,7 @@ private:
 
         mMenuOptions.push_back(std::move(option));
     }
+
+    AudioClip mNavAudio;
+    AudioClip mSelectAudio;
 };

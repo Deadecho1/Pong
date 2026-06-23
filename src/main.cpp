@@ -1,6 +1,7 @@
 #define SDL_MAIN_USE_CALLBACKS 1
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3_mixer/SDL_mixer.h>
 #include <unordered_map>
 #include <vector>
 
@@ -37,13 +38,18 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     App* app = new App();
     SDL_SetAppMetadata("Pong", "dev-0.1", "com.github.Deadecho1.Pong");
 
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD | SDL_INIT_AUDIO)) {
         SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
     if (!TTF_Init()){
         SDL_Log("Couldn't initialize TTF: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
+    if(!MIX_Init()){
+        SDL_Log("Couldn't initialize MIX: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
@@ -65,6 +71,12 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     app->fontLarge = TTF_OpenFont("assets/fonts/PressStart2P-Regular.ttf", FONT_SIZE_LARGE);
     if (!app->fontLarge){
         SDL_Log("Couldn't open large font: %s", SDL_GetError());
+    }
+
+    // create mixer
+    app->mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
+    if (!app->mixer){
+        SDL_Log("Couldn't create mixer: %s", SDL_GetError());
     }
 
     app->screenW = WINDOW_WIDTH;
@@ -187,6 +199,9 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result){
     TTF_CloseFont(app->fontMedium);
     TTF_CloseFont(app->fontLarge);
     TTF_Quit();
+
+    MIX_DestroyMixer(app->mixer);
+    MIX_Quit();
 
     // close gamepads
     for (auto& [id, input] : app->gamepadToInput){

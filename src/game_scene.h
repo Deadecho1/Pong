@@ -82,6 +82,8 @@ public:
         // init seperator line
         createDashedSeperator(mScreenWidth / 2, mScreenHeight, SEPERATOR_WIDTH, SEPERATOR_NUM, SEPERATOR_MARGIN);
         
+        // init ball
+        mBall.Init(appstate->mixer);
         resetBall();
     }
 
